@@ -1,0 +1,3 @@
+CommandRunnerApplet.server usr/lib/bonobo/servers
+command_runner.png         usr/share/pixmaps
+command_runner             usr/share/command-runner-applet

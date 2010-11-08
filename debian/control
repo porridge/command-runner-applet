@@ -1,0 +1,16 @@
+Source: command-runner-applet
+Section: gnome
+Priority: extra
+Maintainer: Marcin Owsiany <porridge@debian.org>
+Build-Depends: debhelper (>= 7)
+Standards-Version: 3.9.1
+
+Package: command-runner-applet
+Architecture: all
+Depends: ${misc:Depends}, python, python-gconf, python-gnomeapplet, python-gobject, python-gtk2
+Description: a panel applet which periodically displays a command output
+ This applet periodically runs a configured shell command and displays its
+ output in a text label on the GNOME panel.
+ .
+ It is useful for keeping track of something, for which having a terminal
+ window constantly open would be inconvenient.

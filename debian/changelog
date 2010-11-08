@@ -1,0 +1,5 @@
+command-runner-applet (0.1-1) experimental; urgency=low
+
+  * Initial release (Closes: #602782)
+
+ -- Marcin Owsiany <porridge@debian.org>  Sun, 07 Nov 2010 18:19:56 -0800
