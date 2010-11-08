@@ -1,0 +1,51 @@
+Command Runner Applet
+=====================
+
+A panel applet which periodically runs a command and displays its output.
+
+
+How does it work
+----------------
+
+You add the applet to your panel the usual way: right-click, select "add to
+panel" and select the Command Runner applet. Once it starts, it loads its
+configuration and periodically runs a shell command, displaying its result in a
+simple text label on the panel, pausing for 5 seconds between the command
+invocations.
+
+The command which is run is configurable via a little 'Preferences' dialog
+accessible by right-clicking the applet. There is also an 'About' dialog.
+The default command is "echo 'Hello.'"
+
+
+What is it good for?
+--------------------
+
+I deveped it to be able to keep an eye on the size of the mail queue on my
+laptop, to avoid the problem where a misconfiguration I introduced would stop
+any mail from being sent from my system.
+
+
+Copyright and License
+---------------------
+
+Code:
+  Copyright 2010 Marcin Owsiany <marcin@owsiany.pl>
+
+Icon taken from gnome-subtitles:
+  Copyright 2006 Stefan A. Keel (Sak) <http://sak.102010.org>
+
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with this program; if not, write to the Free Software Foundation, Inc.,
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.

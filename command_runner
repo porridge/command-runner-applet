@@ -1,0 +1,266 @@
+#!/usr/bin/env python
+# -*- coding: UTF-8 -*-
+"""A panel applet which periodically runs a command and displays its output."""
+
+__author__ = 'Marcin Owsiany <marcin@owsiany.pl>'
+__copyright__ = 'Copyright 2010 Marcin Owsiany <marcin@owsiany.pl>'
+__version__ = '0.1'
+__license__ = '''
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with this program; if not, write to the Free Software Foundation, Inc.,
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+'''
+
+import gconf
+import gnomeapplet
+import gobject
+import gtk
+import logging
+from logging import handlers
+import os
+import pygtk
+import subprocess
+
+pygtk.require('2.0')
+
+
+def logged(f):
+	"""Wraps function with some logging."""
+	def wrapped(*args, **kwargs):
+		try:
+			return f(*args, **kwargs)
+		except Exception, e:
+			logging.exception(e)
+			raise e
+	wrapped.__doc__ = f.__doc__
+	return wrapped
+
+
+class CommandRunner(object):
+	DEFAULT_COMMAND = 'echo Hello.'
+	MENU_XML = """<popup name="button3">
+			<menuitem name="prefs" verb="prefs" label="_Preferences"
+				  pixtype="stock" pixname="gtk-preferences" />
+			<menuitem name="about" verb="about" label="_About"
+				  pixtype="stock" pixname="gnome-stock-about" />
+		</popup>"""
+
+	def __init__(self, applet, iid):
+		"""Sets up the UI and retrieves configuration from gconf."""
+		logging.info('Initializing CommandRunner: %s', [self, applet, iid])
+		self.applet = applet
+		self.setup_ui()
+		self.setup_gconf_client()
+		self.read_configuration()
+		self.setup_gconf_callback()
+		applet.setup_menu(CommandRunner.MENU_XML, [('prefs', self.show_prefs), ('about', self.show_about)], None)
+
+	def setup_ui(self):
+		"""Creates the display label object, and a preferences window."""
+		self.label = gtk.Label('...')
+		self.applet.add(self.label)
+		self.setup_prefs_window()
+
+	def setup_prefs_window(self):
+		"""Create, but do not show the preferences window."""
+		self.prefs = gtk.Window()
+		self.prefs.set_title('Command Runner Preferences')
+		# TODO: internationalization
+		self.prefs.set_resizable(False)
+		# We never actually delete the window, but just hide it, as
+		# this makes it easier to keep track of places which need to be
+		# updated when the configured command changes - see
+		# set_current_command()
+		self.prefs.connect('delete-event', lambda widget, data: self.prefs.hide() or True)
+		vbox = gtk.VBox(False, 2)
+		vbox.set_border_width(5)
+		hbox = gtk.HBox(False, 2)
+		label = gtk.Label('Command:')
+		self.entry = gtk.Entry()
+		hbox.pack_start(label, False, False, 0)
+		hbox.pack_end(self.entry, False, False, 0)
+		vbox.pack_start(hbox, expand=True)
+		# Save configuration on pressing ENTER or leaving the entry box
+		self.entry.connect('focus_out_event', self.config_entry_commit)
+		self.entry.connect('activate', self.config_entry_commit)
+		button = gtk.Button(stock=gtk.STOCK_CLOSE)
+		button.connect('clicked', lambda widget: self.prefs.hide())
+		vbox.pack_start(button, expand=True)
+		self.prefs.add(vbox)
+
+	@logged
+	def config_entry_commit(self, entry, *args):
+		"""Called when user wants to save configuration.
+
+		Sets or deletes the command in gconf, depending on the entry field state.
+		"""
+		text = entry.get_text()
+		config_key = self.get_prefs_key('command')
+		if text:
+			self.gconf_client.set_string(config_key, text)
+		else:
+			self.gconf_client.unset(config_key)
+
+	def get_prefs_key(self, subkey=None):
+		"""A helper method for computing the gconf key.
+
+		Returns this applet's tree path or (if specified) path to given subkey.
+		"""
+		prefs_key = self.applet.get_preferences_key()
+		if subkey:
+			return prefs_key + '/' + subkey
+		else:
+			return prefs_key
+
+	def setup_gconf_client(self):
+		"""Creates a gconf client and preloads configuration."""
+		self.gconf_client = gconf.client_get_default()
+		prefs_key = self.get_prefs_key()
+		logging.info('Preloading %s', prefs_key)
+		self.gconf_client.add_dir(prefs_key, gconf.CLIENT_PRELOAD_RECURSIVE)
+
+	def read_configuration(self):
+		"""Sets the command to whatever was configured or the default."""
+		config_key = self.get_prefs_key('command')
+		configured = self.gconf_client.get_string(config_key)
+		if configured:
+			command = configured
+		else:
+			command = CommandRunner.DEFAULT_COMMAND
+		self.set_current_command(command)
+
+	def set_current_command(self, value):
+		"""Sets the command for the runner and preferences dialog."""
+		logging.info('Setting command [%s]', value)
+		self.command = value
+		self.entry.set_text(value)
+
+	def setup_gconf_callback(self):
+		"""Makes sure we are notified when configuration in gconf changes.
+
+		Also arranges for notification deregistration when applet exits.
+		"""
+		config_key = self.get_prefs_key('command')
+		self.notify_id = self.gconf_client.notify_add(config_key, self.gconf_callback, None)
+		self.label.connect('destroy', self.notify_destroy)
+
+	@logged
+	def gconf_callback(self, gconf_client, cnxn_id, entry, data=None):
+		"""Called by gconf client when configuration changes.
+
+		Does some basic value sanity checking ands sets the command,
+		falling back to the default in case of problems.
+		"""
+		label = self.label
+		logging.info('Got config notification from %s/%s for %s' % (gconf_client, cnxn_id, entry))
+		if entry.value and entry.value.type == gconf.VALUE_STRING:
+			command = entry.value.to_string()
+		else:
+			command = CommandRunner.DEFAULT_COMMAND
+		self.set_current_command(command)
+	
+	@logged
+	def notify_destroy(self, label):
+		"""Called by gtk when applet exits.
+
+		Deregisters gconf notification.
+		"""
+		if self.notify_id:
+			self.gconf_client.notify_remove(self.notify_id)
+
+	@logged
+	def show_prefs(self, obj, item, *data):
+		"""Called when user selects 'preferences' menu item.
+
+		Shows the preferences dialog.
+		"""
+		self.prefs.show_all()
+
+	@logged
+	def show_about(self, obj, item, *data):
+		"""Called when user selects 'about' menu item.
+
+		Creates and shows the About dialog.
+		"""
+		about = gtk.AboutDialog()
+		about.set_name('Command applet')
+		about.set_version(__version__)
+		about.set_authors([__author__])
+		about.set_artists(['Original icon taken from gnome-subtitles:',
+		                   'Stefan A. Keel (Sak) <http://sak.102010.org>'])
+		about.set_logo(gtk.gdk.pixbuf_new_from_file('/usr/share/pixmaps/command_runner.png'))
+		about.set_copyright(__copyright__)
+		about.set_license(__license__)
+		about.set_wrap_license(False)
+		about.run()
+		about.destroy()
+
+	def run(self):
+		"""Shows the UI and starts periodically running the command."""
+		self.applet.show_all()
+		self.run_command()
+
+	def run_command(self):
+		"""Runs the command, shows its output, and schedules itself to run again in 5 seconds."""
+		try:
+			logging.debug('Running command [%s]', self.command)
+			t = subprocess.Popen(self.command, stdout=subprocess.PIPE, shell=True).communicate()[0].rstrip()
+			# TODO: the output could be large, it needs to be trimmed to a sensible size
+			logging.debug('Got [%s] from command', t)
+			self.label.set_text(t)
+		except Exception, e:
+			logging.exception(e)
+			raise e
+		finally:
+			gobject.timeout_add(5000, self.run_command)
+
+
+def command_applet_factory(applet, iid):
+	"""Bonobo factory callback.
+
+	Creates the applet and starts running.
+	"""
+	try:
+		runner = CommandRunner(applet, iid)
+		logging.info('Applet created successfully. Showing it now.')
+		runner.run()
+		return gtk.TRUE
+	except Exception, e:
+		logging.info('Failed to create or run applet.')
+		logging.exception(e)
+		os._exit(1)
+		# TODO: Returning FALSE does not seem to have any effect. The _exit()
+		# is the only way I've found to abort visibly. There should be a better
+		# way, at least something pointing user at syslog.
+		return gtk.FALSE
+
+
+def start_factory(level):
+	"""Sets up logging and starts bonobo factory."""
+	syslog = handlers.SysLogHandler('/dev/log')
+	syslog.setLevel(level)
+	syslog.setFormatter(logging.Formatter('%(asctime)-15s command_runner %(levelname)-8s %(message)s'))
+	logging.getLogger('').setLevel(logging.DEBUG)
+	logging.getLogger('').addHandler(syslog)
+	logging.info('Invoking bonobo factory.')
+	gnomeapplet.bonobo_factory('OAFIID:CommandRunnerApplet_Factory',
+                           gnomeapplet.Applet.__gtype__,
+                           'Generic command line running applet', __version__,
+                           command_applet_factory)
+	logging.info('Exited bonobo factory.')
+
+
+if __name__ == '__main__':
+	# TODO: make it possible to set DEBUG logging without modifying code
+	start_factory(logging.INFO)
+
