@@ -1,3 +1,12 @@
+command-runner-applet (0.1-2) unstable; urgency=low
+
+  * Upload to sid
+  * Bumped Standards-Version to 3.9.2, no changes needed.
+  * Removed indefinite article from Description.
+  * Added a gbp.conf file.
+
+ -- Marcin Owsiany <porridge@debian.org>  Sun, 19 Jun 2011 14:51:29 +0100
+
 command-runner-applet (0.1-1) experimental; urgency=low
 
   * Initial release (Closes: #602782)
