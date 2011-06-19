@@ -8,7 +8,7 @@ Standards-Version: 3.9.2
 Package: command-runner-applet
 Architecture: all
 Depends: ${misc:Depends}, python, python-gconf, python-gnomeapplet, python-gobject, python-gtk2
-Description: a panel applet which periodically displays a command output
+Description: panel applet which periodically displays a command output
  This applet periodically runs a configured shell command and displays its
  output in a text label on the GNOME panel.
  .
