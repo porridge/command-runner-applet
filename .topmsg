@@ -1,0 +1,9 @@
+From: Marcin Owsiany <marcin@owsiany.pl>
+Subject: [PATCH] feature/debug-logging
+
+Temporarily bumped default logging level to DEBUG.
+    
+This is for the experimental upload, so that it is easier to debug any problems
+people find in the ported version.
+
+Signed-off-by: Marcin Owsiany <marcin@owsiany.pl>

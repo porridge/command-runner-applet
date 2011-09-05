@@ -259,5 +259,5 @@ def start_factory(level):
 
 if __name__ == '__main__':
 	# TODO: make it possible to set DEBUG logging without modifying code
-	start_factory(logging.INFO)
+	start_factory(logging.DEBUG)
 
