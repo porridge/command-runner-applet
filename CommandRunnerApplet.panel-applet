@@ -1,0 +1,12 @@
+[Applet Factory]
+Id=CommandRunnerAppletFactory
+Location=/usr/share/command-runner-applet/command_runner
+Name=Command Runner
+Description=Factory for creating the command runner applet.
+
+[CommandRunnerApplet]
+Name=Command Runner
+Description=Periodically runs a command and displays its output.
+Category=Utility
+Icon=command_runner
+BonoboId=OAFIID:CommandRunnerApplet_Factory

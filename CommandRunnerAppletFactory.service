@@ -1,0 +1,3 @@
+[D-BUS Service]
+Name=org.gnome.panel.applet.CommandRunnerAppletFactory
+Exec=/usr/share/command-runner-applet/command_runner
