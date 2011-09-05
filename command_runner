@@ -3,8 +3,8 @@
 """A panel applet which periodically runs a command and displays its output."""
 
 __author__ = 'Marcin Owsiany <marcin@owsiany.pl>'
-__copyright__ = 'Copyright 2010 Marcin Owsiany <marcin@owsiany.pl>'
-__version__ = '0.1'
+__copyright__ = 'Copyright 2010-2011 Marcin Owsiany <marcin@owsiany.pl>'
+__version__ = '0.2'
 __license__ = '''
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
