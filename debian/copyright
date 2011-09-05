@@ -9,7 +9,7 @@ Upstream Authors:
 
 Copyright:
 
-    Copyright 2010 Marcin Owsiany
+    Copyright 2010-2011 Marcin Owsiany
     Copyright 2006 Stefan A. Keel (Sak)
 
 License:
@@ -33,7 +33,7 @@ Public License version 2 can be found in `/usr/share/common-licenses/GPL-2'.
 
 The Debian packaging is:
 
-    Copyright (C) 2010 Marcin Owsiany <porridge@debian.org>
+    Copyright (C) 2010-2011 Marcin Owsiany <porridge@debian.org>
 
 you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
