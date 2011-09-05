@@ -1,3 +1,4 @@
-CommandRunnerApplet.server usr/lib/bonobo/servers
-command_runner.png         usr/share/pixmaps
-command_runner             usr/share/command-runner-applet
+CommandRunnerApplet.panel-applet   usr/share/gnome-panel/4.0/applets
+CommandRunnerAppletFactory.service usr/share/dbus-1/services
+command_runner.png                 usr/share/pixmaps
+command_runner                     usr/share/command-runner-applet
