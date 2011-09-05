@@ -3,8 +3,8 @@
 """A panel applet which periodically runs a command and displays its output."""
 
 __author__ = 'Marcin Owsiany <marcin@owsiany.pl>'
-__copyright__ = 'Copyright 2010 Marcin Owsiany <marcin@owsiany.pl>'
-__version__ = '0.1'
+__copyright__ = 'Copyright 2010-2011 Marcin Owsiany <marcin@owsiany.pl>'
+__version__ = '0.2'
 __license__ = '''
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -21,17 +21,15 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 '''
 
-import gconf
-import gnomeapplet
-import gobject
-import gtk
+import gi
 import logging
 from logging import handlers
 import os
-import pygtk
 import subprocess
 
-pygtk.require('2.0')
+gi.require_version('Gtk', '3.0')
+
+from gi.repository import GObject, Gtk, GdkPixbuf, GConf, PanelApplet
 
 
 def logged(f):
@@ -48,12 +46,6 @@ def logged(f):
 
 class CommandRunner(object):
 	DEFAULT_COMMAND = 'echo Hello.'
-	MENU_XML = """<popup name="button3">
-			<menuitem name="prefs" verb="prefs" label="_Preferences"
-				  pixtype="stock" pixname="gtk-preferences" />
-			<menuitem name="about" verb="about" label="_About"
-				  pixtype="stock" pixname="gnome-stock-about" />
-		</popup>"""
 
 	def __init__(self, applet, iid):
 		"""Sets up the UI and retrieves configuration from gconf."""
@@ -63,17 +55,22 @@ class CommandRunner(object):
 		self.setup_gconf_client()
 		self.read_configuration()
 		self.setup_gconf_callback()
-		applet.setup_menu(CommandRunner.MENU_XML, [('prefs', self.show_prefs), ('about', self.show_about)], None)
+		action_group = Gtk.ActionGroup('CommandRunnerApplet Actions')
+		action_group.add_actions([
+			('prefs', Gtk.STOCK_PREFERENCES, None, None, None, self.show_prefs),
+			('about', Gtk.STOCK_ABOUT, None, None, None, self.show_about),
+		])
+		applet.setup_menu('<menuitem action="prefs" /><menuitem action="about" />', action_group)
 
 	def setup_ui(self):
 		"""Creates the display label object, and a preferences window."""
-		self.label = gtk.Label('...')
+		self.label = Gtk.Label('...')
 		self.applet.add(self.label)
 		self.setup_prefs_window()
 
 	def setup_prefs_window(self):
 		"""Create, but do not show the preferences window."""
-		self.prefs = gtk.Window()
+		self.prefs = Gtk.Window()
 		self.prefs.set_title('Command Runner Preferences')
 		# TODO: internationalization
 		self.prefs.set_resizable(False)
@@ -82,20 +79,20 @@ class CommandRunner(object):
 		# updated when the configured command changes - see
 		# set_current_command()
 		self.prefs.connect('delete-event', lambda widget, data: self.prefs.hide() or True)
-		vbox = gtk.VBox(False, 2)
+		vbox = Gtk.VBox(homogeneous=False, spacing=2)
 		vbox.set_border_width(5)
-		hbox = gtk.HBox(False, 2)
-		label = gtk.Label('Command:')
-		self.entry = gtk.Entry()
+		hbox = Gtk.HBox(homogeneous=False, spacing=2)
+		label = Gtk.Label('Command:')
+		self.entry = Gtk.Entry()
 		hbox.pack_start(label, False, False, 0)
 		hbox.pack_end(self.entry, False, False, 0)
-		vbox.pack_start(hbox, expand=True)
+		vbox.pack_start(hbox, True, False, 0)
 		# Save configuration on pressing ENTER or leaving the entry box
 		self.entry.connect('focus_out_event', self.config_entry_commit)
 		self.entry.connect('activate', self.config_entry_commit)
-		button = gtk.Button(stock=gtk.STOCK_CLOSE)
+		button = Gtk.Button(stock=Gtk.STOCK_CLOSE)
 		button.connect('clicked', lambda widget: self.prefs.hide())
-		vbox.pack_start(button, expand=True)
+		vbox.pack_start(button, True, False, 0)
 		self.prefs.add(vbox)
 
 	@logged
@@ -124,10 +121,10 @@ class CommandRunner(object):
 
 	def setup_gconf_client(self):
 		"""Creates a gconf client and preloads configuration."""
-		self.gconf_client = gconf.client_get_default()
+		self.gconf_client = GConf.Client.get_default()
 		prefs_key = self.get_prefs_key()
 		logging.info('Preloading %s', prefs_key)
-		self.gconf_client.add_dir(prefs_key, gconf.CLIENT_PRELOAD_RECURSIVE)
+		self.gconf_client.add_dir(prefs_key, GConf.ClientPreloadType.PRELOAD_RECURSIVE)
 
 	def read_configuration(self):
 		"""Sets the command to whatever was configured or the default."""
@@ -163,7 +160,7 @@ class CommandRunner(object):
 		"""
 		label = self.label
 		logging.info('Got config notification from %s/%s for %s' % (gconf_client, cnxn_id, entry))
-		if entry.value and entry.value.type == gconf.VALUE_STRING:
+		if entry.value and entry.value.type == GConf.ValueType.STRING:
 			command = entry.value.to_string()
 		else:
 			command = CommandRunner.DEFAULT_COMMAND
@@ -192,13 +189,13 @@ class CommandRunner(object):
 
 		Creates and shows the About dialog.
 		"""
-		about = gtk.AboutDialog()
+		about = Gtk.AboutDialog()
 		about.set_name('Command applet')
 		about.set_version(__version__)
 		about.set_authors([__author__])
 		about.set_artists(['Original icon taken from gnome-subtitles:',
 		                   'Stefan A. Keel (Sak) <http://sak.102010.org>'])
-		about.set_logo(gtk.gdk.pixbuf_new_from_file('/usr/share/pixmaps/command_runner.png'))
+		about.set_logo(GdkPixbuf.Pixbuf.new_from_file('/usr/share/pixmaps/command_runner.png'))
 		about.set_copyright(__copyright__)
 		about.set_license(__license__)
 		about.set_wrap_license(False)
@@ -222,10 +219,10 @@ class CommandRunner(object):
 			logging.exception(e)
 			raise e
 		finally:
-			gobject.timeout_add(5000, self.run_command)
+			GObject.timeout_add(5000, self.run_command)
 
 
-def command_applet_factory(applet, iid):
+def command_applet_factory(applet, iid, data):
 	"""Bonobo factory callback.
 
 	Creates the applet and starts running.
@@ -234,7 +231,7 @@ def command_applet_factory(applet, iid):
 		runner = CommandRunner(applet, iid)
 		logging.info('Applet created successfully. Showing it now.')
 		runner.run()
-		return gtk.TRUE
+		return True
 	except Exception, e:
 		logging.info('Failed to create or run applet.')
 		logging.exception(e)
@@ -242,7 +239,7 @@ def command_applet_factory(applet, iid):
 		# TODO: Returning FALSE does not seem to have any effect. The _exit()
 		# is the only way I've found to abort visibly. There should be a better
 		# way, at least something pointing user at syslog.
-		return gtk.FALSE
+		return False
 
 
 def start_factory(level):
@@ -252,12 +249,12 @@ def start_factory(level):
 	syslog.setFormatter(logging.Formatter('%(asctime)-15s command_runner %(levelname)-8s %(message)s'))
 	logging.getLogger('').setLevel(logging.DEBUG)
 	logging.getLogger('').addHandler(syslog)
-	logging.info('Invoking bonobo factory.')
-	gnomeapplet.bonobo_factory('OAFIID:CommandRunnerApplet_Factory',
-                           gnomeapplet.Applet.__gtype__,
-                           'Generic command line running applet', __version__,
-                           command_applet_factory)
-	logging.info('Exited bonobo factory.')
+	logging.info('Starting applet factory, wating for gnome-panel to connect.')
+	PanelApplet.Applet.factory_main(
+		'CommandRunnerAppletFactory',
+		PanelApplet.Applet.__gtype__,
+		command_applet_factory, None)
+	logging.info('Exited the factory method.')
 
 
 if __name__ == '__main__':
