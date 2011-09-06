@@ -21,9 +21,16 @@ The default command is "echo 'Hello.'"
 What is it good for?
 --------------------
 
-I deveped it to be able to keep an eye on the size of the mail queue on my
+I developed it to be able to keep an eye on the size of the mail queue on my
 laptop, to avoid the problem where a misconfiguration I introduced would stop
 any mail from being sent from my system.
+
+Known problems
+--------------
+
+The command is run from the main thread, so the UI is unresponsive while the
+command is running. However any mouse/keyboard events will be processed when
+the current command finishes.
 
 
 Copyright and License
