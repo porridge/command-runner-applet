@@ -1,3 +1,13 @@
+command-runner-applet (0.2-1) experimental; urgency=low
+
+  * Ported to GTK3 and libpanel-applet-4-0+GIR. (Closes: #638115)
+  * Temporarily bumped default logging level to DEBUG.
+  * Added a note about UI unresponsiveness.
+  * Depends and install changes for GTK3 port.
+  * Bumped version and copyright years.
+
+ -- Marcin Owsiany <porridge@debian.org>  Tue, 06 Sep 2011 13:02:33 +0100
+
 command-runner-applet (0.1-2) unstable; urgency=low
 
   * Upload to sid
