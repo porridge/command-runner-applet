@@ -1,3 +1,11 @@
+command-runner-applet (0.2-2) unstable; urgency=low
+
+  * Upload to unstable
+  * Still with DEBUG logging for a while, to ease debugging.
+  * Changed to using topgit for patch management.
+
+ -- Marcin Owsiany <porridge@debian.org>  Sun, 16 Oct 2011 15:58:57 +0100
+
 command-runner-applet (0.2-1) experimental; urgency=low
 
   * Ported to GTK3 and libpanel-applet-4-0+GIR. (Closes: #638115)
