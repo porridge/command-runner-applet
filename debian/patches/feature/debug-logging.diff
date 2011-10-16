@@ -1,0 +1,27 @@
+From: Marcin Owsiany <marcin@owsiany.pl>
+Subject: [PATCH] feature/debug-logging
+
+Temporarily bumped default logging level to DEBUG.
+    
+This is for the experimental upload, so that it is easier to debug any problems
+people find in the ported version.
+
+Signed-off-by: Marcin Owsiany <marcin@owsiany.pl>
+
+---
+ command_runner |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/command_runner b/command_runner
+index dc99356..6a7f411 100755
+--- a/command_runner
++++ b/command_runner
+@@ -259,5 +259,5 @@ def start_factory(level):
+ 
+ if __name__ == '__main__':
+ 	# TODO: make it possible to set DEBUG logging without modifying code
+-	start_factory(logging.INFO)
++	start_factory(logging.DEBUG)
+ 
+-- 
+tg: (ea36f7c..) feature/debug-logging (depends on: master)
