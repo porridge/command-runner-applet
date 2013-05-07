@@ -1,3 +1,9 @@
+command-runner-applet (0.3-1) unstable; urgency=high
+
+  * Fixed an incompatibility with newer version of GTK.
+
+ -- Marcin Owsiany <porridge@debian.org>  Tue, 07 May 2013 21:44:58 +0200
+
 command-runner-applet (0.2-2) unstable; urgency=low
 
   * Upload to unstable
