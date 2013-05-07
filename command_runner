@@ -176,7 +176,7 @@ class CommandRunner(object):
 			self.gconf_client.notify_remove(self.notify_id)
 
 	@logged
-	def show_prefs(self, obj, item, *data):
+	def show_prefs(self, *data):
 		"""Called when user selects 'preferences' menu item.
 
 		Shows the preferences dialog.
@@ -184,7 +184,7 @@ class CommandRunner(object):
 		self.prefs.show_all()
 
 	@logged
-	def show_about(self, obj, item, *data):
+	def show_about(self, *data):
 		"""Called when user selects 'about' menu item.
 
 		Creates and shows the About dialog.
