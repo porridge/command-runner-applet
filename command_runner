@@ -28,9 +28,21 @@ import os
 import subprocess
 
 gi.require_version('Gtk', '3.0')
+gi.require_version('PanelApplet', '5.0')
 
 from gi.repository import GObject, Gtk, GdkPixbuf, Gio, PanelApplet
 
+
+menu_xml = '''<section>
+  <item>
+    <attribute name="label" translatable="yes">Preferences</attribute>
+    <attribute name="action">command-runner-applet.prefs</attribute>
+  </item>
+  <item>
+    <attribute name="label" translatable="yes">About</attribute>
+    <attribute name="action">command-runner-applet.about</attribute>
+  </item>
+</section>'''
 
 def logged(f):
 	"""Wraps function with some logging."""
@@ -55,12 +67,18 @@ class CommandRunner(object):
 		self.settings = applet.settings_new('org.gnome.gnome-panel.applet.command-runner')
 		self.settings.connect('changed', self.settings_callback)
 		self.read_configuration()
-		action_group = Gtk.ActionGroup('CommandRunnerApplet Actions')
-		action_group.add_actions([
-			('prefs', Gtk.STOCK_PREFERENCES, None, None, None, self.show_prefs),
-			('about', Gtk.STOCK_ABOUT, None, None, None, self.show_about),
-		])
-		applet.setup_menu('<menuitem action="prefs" /><menuitem action="about" />', action_group)
+		action_group = Gio.SimpleActionGroup()
+
+		action = Gio.SimpleAction.new('prefs')
+		action.connect('activate', self.show_prefs)
+		action_group.add_action(action)
+
+		action = Gio.SimpleAction.new('about')
+		action.connect('activate', self.show_about)
+		action_group.add_action(action)
+
+		applet.setup_menu(menu_xml, action_group, '')
+		applet.insert_action_group('command-runner-applet', action_group)
 
 	def setup_ui(self):
 		"""Creates the display label object, and a preferences window."""
@@ -130,7 +148,7 @@ class CommandRunner(object):
 		self.read_configuration()
 
 	@logged
-	def show_prefs(self, obj, item, *data):
+	def show_prefs(self, *data):
 		"""Called when user selects 'preferences' menu item.
 
 		Shows the preferences dialog.
@@ -138,7 +156,7 @@ class CommandRunner(object):
 		self.prefs.show_all()
 
 	@logged
-	def show_about(self, obj, item, *data):
+	def show_about(self, *data):
 		"""Called when user selects 'about' menu item.
 
 		Creates and shows the About dialog.
