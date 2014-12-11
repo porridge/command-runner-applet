@@ -21,9 +21,15 @@ The default command is "echo 'Hello.'"
 What is it good for?
 --------------------
 
-I developed it to be able to keep an eye on the size of the mail queue on my
-laptop, to avoid the problem where a misconfiguration I introduced would stop
-any mail from being sent from my system.
+ * keep an eye on the size of the mail queue, to avoid the problem where a
+   misconfiguration would stop any mail from being sent out:
+
+   echo Q=$(exim4 -bpc)
+
+ * display free space on your filesystems, with something like:
+
+   echo $(df -h / /boot | tail -n +2 | awk '{print $4}') free
+
 
 Known problems
 --------------
@@ -32,6 +38,23 @@ The command is run from the main thread, so the UI is unresponsive while the
 command is running. However any mouse/keyboard events will be processed when
 the current command finishes.
 
+Migration from GConf
+--------------------
+
+Up to and including version 0.3 the applet stored its configuration (namely the
+command line to run) in GConf.  Since version 0.4 it has started using
+gsettings (which use dconf on Linux).  That change was necessary to support
+running under gnome-panel 3.14.
+
+If your distribution does not do this automatically, then in order to move your
+configuration to the new configuration store, you need to run the following
+command:
+
+gsettings-data-convert --verbose --file command-runner-applet.convert
+
+Note that it will only migrate configurations of a limited number of applet
+instances. Have a look at gconf-editor and edit the file as needed if you had a
+lot of instances at some point in the past.
 
 Copyright and License
 ---------------------
