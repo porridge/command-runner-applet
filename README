@@ -21,9 +21,15 @@ The default command is "echo 'Hello.'"
 What is it good for?
 --------------------
 
-I developed it to be able to keep an eye on the size of the mail queue on my
-laptop, to avoid the problem where a misconfiguration I introduced would stop
-any mail from being sent from my system.
+ * keep an eye on the size of the mail queue, to avoid the problem where a
+   misconfiguration would stop any mail from being sent out:
+
+   echo Q=$(exim4 -bpc)
+
+ * display free space on your filesystems, with something like:
+
+   echo $(df -h / /boot | tail -n +2 | awk '{print $4}') free
+
 
 Known problems
 --------------
