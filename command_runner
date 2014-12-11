@@ -4,7 +4,7 @@
 
 __author__ = 'Marcin Owsiany <marcin@owsiany.pl>'
 __copyright__ = 'Copyright 2010-2011 Marcin Owsiany <marcin@owsiany.pl>'
-__version__ = '0.2'
+__version__ = '0.4'
 __license__ = '''
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -28,9 +28,21 @@ import os
 import subprocess
 
 gi.require_version('Gtk', '3.0')
+gi.require_version('PanelApplet', '5.0')
 
-from gi.repository import GObject, Gtk, GdkPixbuf, GConf, PanelApplet
+from gi.repository import GObject, Gtk, GdkPixbuf, Gio, PanelApplet
 
+
+menu_xml = '''<section>
+  <item>
+    <attribute name="label" translatable="yes">Preferences</attribute>
+    <attribute name="action">command-runner-applet.prefs</attribute>
+  </item>
+  <item>
+    <attribute name="label" translatable="yes">About</attribute>
+    <attribute name="action">command-runner-applet.about</attribute>
+  </item>
+</section>'''
 
 def logged(f):
 	"""Wraps function with some logging."""
@@ -48,19 +60,25 @@ class CommandRunner(object):
 	DEFAULT_COMMAND = 'echo Hello.'
 
 	def __init__(self, applet, iid):
-		"""Sets up the UI and retrieves configuration from gconf."""
+		"""Sets up the UI and retrieves configuration from settings."""
 		logging.info('Initializing CommandRunner: %s', [self, applet, iid])
 		self.applet = applet
 		self.setup_ui()
-		self.setup_gconf_client()
+		self.settings = applet.settings_new('org.gnome.gnome-panel.applet.command-runner')
+		self.settings.connect('changed', self.settings_callback)
 		self.read_configuration()
-		self.setup_gconf_callback()
-		action_group = Gtk.ActionGroup('CommandRunnerApplet Actions')
-		action_group.add_actions([
-			('prefs', Gtk.STOCK_PREFERENCES, None, None, None, self.show_prefs),
-			('about', Gtk.STOCK_ABOUT, None, None, None, self.show_about),
-		])
-		applet.setup_menu('<menuitem action="prefs" /><menuitem action="about" />', action_group)
+		action_group = Gio.SimpleActionGroup()
+
+		action = Gio.SimpleAction.new('prefs')
+		action.connect('activate', self.show_prefs)
+		action_group.add_action(action)
+
+		action = Gio.SimpleAction.new('about')
+		action.connect('activate', self.show_about)
+		action_group.add_action(action)
+
+		applet.setup_menu(menu_xml, action_group, '')
+		applet.insert_action_group('command-runner-applet', action_group)
 
 	def setup_ui(self):
 		"""Creates the display label object, and a preferences window."""
@@ -99,37 +117,17 @@ class CommandRunner(object):
 	def config_entry_commit(self, entry, *args):
 		"""Called when user wants to save configuration.
 
-		Sets or deletes the command in gconf, depending on the entry field state.
+		Sets or deletes the command in settings, depending on the entry field state.
 		"""
 		text = entry.get_text()
-		config_key = self.get_prefs_key('command')
 		if text:
-			self.gconf_client.set_string(config_key, text)
+			self.settings.set_string('command', text)
 		else:
-			self.gconf_client.unset(config_key)
-
-	def get_prefs_key(self, subkey=None):
-		"""A helper method for computing the gconf key.
-
-		Returns this applet's tree path or (if specified) path to given subkey.
-		"""
-		prefs_key = self.applet.get_preferences_key()
-		if subkey:
-			return prefs_key + '/' + subkey
-		else:
-			return prefs_key
-
-	def setup_gconf_client(self):
-		"""Creates a gconf client and preloads configuration."""
-		self.gconf_client = GConf.Client.get_default()
-		prefs_key = self.get_prefs_key()
-		logging.info('Preloading %s', prefs_key)
-		self.gconf_client.add_dir(prefs_key, GConf.ClientPreloadType.PRELOAD_RECURSIVE)
+			self.settings.reset('command')
 
 	def read_configuration(self):
 		"""Sets the command to whatever was configured or the default."""
-		config_key = self.get_prefs_key('command')
-		configured = self.gconf_client.get_string(config_key)
+		configured = self.settings.get_string('command')
 		if configured:
 			command = configured
 		else:
@@ -142,38 +140,12 @@ class CommandRunner(object):
 		self.command = value
 		self.entry.set_text(value)
 
-	def setup_gconf_callback(self):
-		"""Makes sure we are notified when configuration in gconf changes.
-
-		Also arranges for notification deregistration when applet exits.
-		"""
-		config_key = self.get_prefs_key('command')
-		self.notify_id = self.gconf_client.notify_add(config_key, self.gconf_callback, None)
-		self.label.connect('destroy', self.notify_destroy)
-
 	@logged
-	def gconf_callback(self, gconf_client, cnxn_id, entry, data=None):
-		"""Called by gconf client when configuration changes.
-
-		Does some basic value sanity checking ands sets the command,
-		falling back to the default in case of problems.
+	def settings_callback(self, settings, key, data=None):
+		"""Called by settings when configuration changes.
 		"""
-		label = self.label
-		logging.info('Got config notification from %s/%s for %s' % (gconf_client, cnxn_id, entry))
-		if entry.value and entry.value.type == GConf.ValueType.STRING:
-			command = entry.value.to_string()
-		else:
-			command = CommandRunner.DEFAULT_COMMAND
-		self.set_current_command(command)
-	
-	@logged
-	def notify_destroy(self, label):
-		"""Called by gtk when applet exits.
-
-		Deregisters gconf notification.
-		"""
-		if self.notify_id:
-			self.gconf_client.notify_remove(self.notify_id)
+		logging.info('Got config notification for %s' % key)
+		self.read_configuration()
 
 	@logged
 	def show_prefs(self, *data):

@@ -1,0 +1,9 @@
+<schemalist>
+  <schema id="org.gnome.gnome-panel.applet.command-runner">
+    <key name="command" type="s">
+      <default>"echo Hello."</default>
+      <summary>Command</summary>
+      <description>The command to run.</description>
+    </key>
+  </schema>
+</schemalist>
