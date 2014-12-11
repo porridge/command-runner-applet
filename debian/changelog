@@ -1,3 +1,15 @@
+command-runner-applet (0.4-1) experimental; urgency=medium
+
+  * New upstream version: port to panel-applet 3.14
+  * Updated dependencies accordingly
+  * Dropped the now apparently useless python-gobject dependency
+  * Install the new data migration and schema files
+  * Install the panel-applet file in the new 5.0 panel directory
+  * Bump Standards-Version to 3.9.6 (no changes needed)
+  * Added Vcs-* fields
+
+ -- Marcin Owsiany <porridge@debian.org>  Fri, 05 Dec 2014 11:33:05 +0100
+
 command-runner-applet (0.3-1) unstable; urgency=high
 
   * Fixed an incompatibility with newer version of GTK.

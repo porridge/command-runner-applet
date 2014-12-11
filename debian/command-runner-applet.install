@@ -1,4 +1,6 @@
-CommandRunnerApplet.panel-applet   usr/share/gnome-panel/4.0/applets
+CommandRunnerApplet.panel-applet   usr/share/gnome-panel/5.0/applets
 CommandRunnerAppletFactory.service usr/share/dbus-1/services
 command_runner.png                 usr/share/pixmaps
 command_runner                     usr/share/command-runner-applet
+org.gnome.gnome-panel.applet.command-runner.gschema.xml usr/share/glib-2.0/schemas
+command-runner-applet.convert      usr/share/GConf/gsettings
