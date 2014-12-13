@@ -1,3 +1,9 @@
+command-runner-applet (0.4-2) experimental; urgency=medium
+
+  * Add a Depends on python-gi
+
+ -- Marcin Owsiany <porridge@debian.org>  Sat, 13 Dec 2014 21:41:39 +0100
+
 command-runner-applet (0.4-1) experimental; urgency=medium
 
   * New upstream version: port to panel-applet 3.14
