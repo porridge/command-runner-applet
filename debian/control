@@ -9,7 +9,7 @@ Vcs-Browser: https://github.com/porridge/command-runner-applet
 
 Package: command-runner-applet
 Architecture: all
-Depends: ${misc:Depends}, python,
+Depends: ${misc:Depends}, python, python-gi,
  gir1.2-gtk-3.0, gir1.2-gdkpixbuf-2.0,
  gir1.2-panelapplet-5.0
 Description: panel applet which periodically displays a command output
