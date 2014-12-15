@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
 """A panel applet which periodically runs a command and displays its output."""
 
@@ -49,9 +49,9 @@ def logged(f):
 	def wrapped(*args, **kwargs):
 		try:
 			return f(*args, **kwargs)
-		except Exception, e:
+		except Exception as e:
 			logging.exception(e)
-			raise e
+			raise
 	wrapped.__doc__ = f.__doc__
 	return wrapped
 
@@ -186,10 +186,10 @@ class CommandRunner(object):
 			t = subprocess.Popen(self.command, stdout=subprocess.PIPE, shell=True).communicate()[0].rstrip()
 			# TODO: the output could be large, it needs to be trimmed to a sensible size
 			logging.debug('Got [%s] from command', t)
-			self.label.set_text(t)
-		except Exception, e:
+			self.label.set_text(t.decode('utf-8', 'replace'))
+		except Exception as e:
 			logging.exception(e)
-			raise e
+			raise
 		finally:
 			GObject.timeout_add(5000, self.run_command)
 
@@ -204,7 +204,7 @@ def command_applet_factory(applet, iid, data):
 		logging.info('Applet created successfully. Showing it now.')
 		runner.run()
 		return True
-	except Exception, e:
+	except Exception as e:
 		logging.info('Failed to create or run applet.')
 		logging.exception(e)
 		os._exit(1)
