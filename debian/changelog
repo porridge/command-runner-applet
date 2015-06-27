@@ -1,3 +1,9 @@
+command-runner-applet (0.4-3) unstable; urgency=medium
+
+  * Upload to unstable. (Closes: #789766)
+
+ -- Marcin Owsiany <porridge@debian.org>  Sat, 27 Jun 2015 21:42:07 +0200
+
 command-runner-applet (0.4-2) experimental; urgency=medium
 
   * Add a Depends on python-gi
