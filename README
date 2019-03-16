@@ -4,6 +4,20 @@ Command Runner Applet
 A panel applet which periodically runs a command and displays its output.
 
 
+NOTE: This applet is incompatible with recent gnome-panel.
+----------------------------------------------------------
+
+This is because support for this type of applets was dropped in gnome-panel 3.22.
+There is however a "Command" applet available since gnome-applets 3.20, which
+is even more configurable than this one. More details in
+https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=838903#5
+
+When changing to use to the new applet, you can use the following command to
+find the commands which you had configured with command-runner-applet:
+
+gconftool-2 --all-dirs /apps/panel3-applets|xargs -i gconftool-2 --get {}/command 2>/dev/null
+
+
 How does it work
 ----------------
 
